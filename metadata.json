@@ -1,0 +1,5 @@
+{
+  "name": " VeriChain: Fake News Detector",
+  "description": "An application that uses AI to analyze news articles for authenticity and simulates recording the verification results on a blockchain ledger, promoting transparency and trust in information.",
+  "requestFramePermissions": []
+}
