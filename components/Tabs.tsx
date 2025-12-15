@@ -8,23 +8,33 @@ interface TabsProps {
 }
 
 export const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => {
-  const tabs = [Tab.Detector, Tab.Ledger];
+  const tabs = [
+    { name: Tab.Detector, label: 'ANALYZER' },
+    { name: Tab.Ledger, label: 'LEDGER' }
+  ];
 
   const getTabClass = (tab: Tab) => {
     return activeTab === tab
-      ? 'bg-cyan-500 text-white'
-      : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white';
+      ? 'bg-newspaper-paper border-t-2 border-l-2 border-r-2 border-black border-b-0 text-newspaper-ink relative z-10'
+      : 'bg-newspaper-cream border-2 border-black border-b-2 text-newspaper-gray hover:bg-newspaper-paper';
   };
 
   return (
-    <div className="flex justify-center space-x-2 p-1 bg-gray-900/50 rounded-lg max-w-sm mx-auto">
-      {tabs.map((tab) => (
+    <div className="flex justify-center max-w-2xl mx-auto animate-slide-up" style={{ marginBottom: '-2px' }}>
+      {tabs.map((tab, index) => (
         <button
-          key={tab}
-          onClick={() => setActiveTab(tab)}
-          className={`w-full py-2.5 text-sm font-semibold rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 ${getTabClass(tab)}`}
+          key={tab.name}
+          onClick={() => setActiveTab(tab.name)}
+          className={`
+            py-3 px-8 text-xs font-bold tracking-widest
+            smooth-transition font-serif-alt
+            focus:outline-none
+            ${getTabClass(tab.name)}
+            ${index === 0 ? '' : '-ml-[2px]'}
+          `}
+          style={{ fontFamily: 'Merriweather, serif' }}
         >
-          {tab}
+          {tab.label}
         </button>
       ))}
     </div>

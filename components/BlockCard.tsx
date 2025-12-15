@@ -8,35 +8,83 @@ interface BlockCardProps {
 export const BlockCard: React.FC<BlockCardProps> = ({ block }) => {
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'border-green-500';
-    if (score >= 5) return 'border-yellow-500';
-    return 'border-red-500';
+    if (score >= 8) return 'border-[#39ff14]';
+    if (score >= 5) return 'border-[#ffa500]';
+    return 'border-[#ff0040]';
+  }
+
+  const getScoreTextColor = (score: number) => {
+    if (score >= 8) return 'text-[#39ff14]';
+    if (score >= 5) return 'text-[#ffa500]';
+    return 'text-[#ff0040]';
+  }
+
+  const getScoreGlow = (score: number) => {
+    if (score >= 8) return 'neon-glow-green';
+    if (score >= 5) return 'neon-glow-orange';
+    return 'shadow-[0_0_20px_rgba(255,0,64,0.4)]';
   }
 
   return (
-    <div className={`bg-gray-800 rounded-lg shadow-lg border-l-4 ${getScoreColor(block.data.credibilityScore)} transition-shadow hover:shadow-cyan-500/20`}>
-        <div className="p-4">
-            <div className="flex justify-between items-start">
-                <div>
-                   <span className="text-xs text-gray-500">Block #{block.index}</span>
-                   <h3 className="text-lg font-semibold text-gray-200">{block.data.summary}</h3>
+    <div className={`glass rounded-xl border-l-4 ${getScoreColor(block.data.credibilityScore)} transition-all duration-300 hover:border-[#00f0ff] hover:shadow-2xl hover:shadow-[#00f0ff]/20 overflow-hidden relative group animate-slide-up`}>
+        {/* Holographic overlay on hover */}
+        <div className="holographic absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"></div>
+
+        <div className="p-6 relative z-10">
+            <div className="flex justify-between items-start mb-4">
+                <div className="flex-1">
+                   <span className="text-xs font-mono text-[#00f0ff] bg-[#00f0ff]/10 px-2 py-1 rounded border border-[#00f0ff]/30">
+                     BLOCK #{block.index}
+                   </span>
+                   <h3 className="text-lg font-orbitron font-bold text-white mt-3 leading-tight">
+                     {block.data.summary}
+                   </h3>
                 </div>
-                <div className={`px-4 py-2 rounded-md bg-gray-900`}>
-                    {/* FIX: Corrected className property to use a valid template literal for dynamic classes. The previous syntax was invalid and caused parsing errors. */}
-                    <p className={`font-bold text-2xl text-center ${getScoreColor(block.data.credibilityScore).replace('border-','text-')}`}>{block.data.credibilityScore}<span className="text-base text-gray-500">/10</span></p>
-                    <p className="text-xs text-gray-400 text-center">Credibility</p>
+
+                <div className={`glass px-5 py-3 rounded-lg border-2 ${getScoreColor(block.data.credibilityScore)} ${getScoreGlow(block.data.credibilityScore)} ml-4`}>
+                    <p className={`font-orbitron font-black text-3xl text-center ${getScoreTextColor(block.data.credibilityScore)}`}>
+                      {block.data.credibilityScore}
+                      <span className="text-base text-gray-500">/10</span>
+                    </p>
+                    <p className="text-xs text-gray-400 text-center font-mono mt-1 uppercase">Score</p>
                 </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-700 text-xs text-gray-400 space-y-2">
-                <p><strong className="font-medium text-gray-300">Factuality:</strong> {block.data.factuality}</p>
-                <p><strong className="font-medium text-gray-300">Bias:</strong> {block.data.biasAnalysis}</p>
+            <div className="mt-5 pt-5 border-t border-[#00f0ff]/30 text-xs text-gray-400 space-y-3 font-rajdhani">
+                <div className="flex items-start space-x-2">
+                  <span className="text-[#00f0ff] font-mono">▸</span>
+                  <p className="flex-1">
+                    <strong className="font-semibold text-gray-300 font-mono">FACTUALITY:</strong>{' '}
+                    <span className="text-gray-400">{block.data.factuality}</span>
+                  </p>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <span className="text-[#ff6b00] font-mono">▸</span>
+                  <p className="flex-1">
+                    <strong className="font-semibold text-gray-300 font-mono">BIAS:</strong>{' '}
+                    <span className="text-gray-400">{block.data.biasAnalysis}</span>
+                  </p>
+                </div>
             </div>
         </div>
-        <div className="bg-gray-900/50 px-4 py-2 rounded-b-lg font-mono text-xs text-gray-500 space-y-1 overflow-hidden">
-             <p className="truncate"><strong>Timestamp:</strong> {new Date(block.timestamp).toISOString()}</p>
-             <p className="truncate"><strong>Hash:</strong> <span className="text-cyan-400">{block.hash}</span></p>
-             <p className="truncate"><strong>Prev. Hash:</strong> {block.previousHash}</p>
+
+        {/* Blockchain metadata footer */}
+        <div className="bg-black/60 px-6 py-4 rounded-b-xl font-mono text-xs text-gray-500 space-y-2 border-t border-[#00f0ff]/20">
+             <div className="flex items-center space-x-2">
+               <span className="text-[#00f0ff]">⧗</span>
+               <strong className="text-gray-400">TIMESTAMP:</strong>
+               <span className="text-gray-500">{new Date(block.timestamp).toISOString()}</span>
+             </div>
+             <div className="flex items-start space-x-2 overflow-hidden">
+               <span className="text-[#00f0ff]">⬢</span>
+               <strong className="text-gray-400">HASH:</strong>
+               <span className="text-[#00f0ff] truncate">{block.hash}</span>
+             </div>
+             <div className="flex items-start space-x-2 overflow-hidden">
+               <span className="text-[#ff6b00]">⬡</span>
+               <strong className="text-gray-400">PREV:</strong>
+               <span className="text-gray-500 truncate">{block.previousHash}</span>
+             </div>
         </div>
     </div>
   );

@@ -14,7 +14,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  
+
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
   const [isFetchingNews, setIsFetchingNews] = useState<boolean>(false);
   const [newsError, setNewsError] = useState<string | null>(null);
@@ -59,17 +59,17 @@ const App: React.FC = () => {
   const handleRecordToLedger = () => {
     if (analysisResult) {
       addBlock(analysisResult);
-      setAnalysisResult(null); // Clear result after adding to chain
-      setActiveTab(Tab.Ledger); // Switch to ledger view
+      setAnalysisResult(null);
+      setActiveTab(Tab.Ledger);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 font-sans">
+    <div className="min-h-screen relative bg-newspaper-cream">
       <Header />
-      <main className="container mx-auto p-4 md:p-8">
+      <main className="container mx-auto p-4 md:p-8 min-h-[calc(100vh-200px)]">
         <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
-        <div className="mt-8">
+        <div className="mt-0">
           {activeTab === Tab.Detector && (
             <Detector
               onAnalyze={handleAnalyze}
@@ -88,8 +88,13 @@ const App: React.FC = () => {
           )}
         </div>
       </main>
-      <footer className="text-center p-4 text-gray-500 text-sm">
-        <p>VeriChain &copy; 2024. A conceptual demonstration of AI analysis and simulated blockchain immutability.</p>
+      <footer className="bg-newspaper-paper text-center p-6 mt-12 border-t-4 border-black">
+        <p className="font-serif font-black text-newspaper-ink text-sm tracking-wider" style={{ fontFamily: 'Playfair Display, serif' }}>
+          VeriChain
+        </p>
+        <p className="text-newspaper-gray text-xs mt-1 font-body">
+          © 2024 • AI-powered news verification with blockchain ledger
+        </p>
       </footer>
     </div>
   );
