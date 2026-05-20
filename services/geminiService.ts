@@ -3,6 +3,8 @@ import type { AnalysisResult, NewsArticle, AnalysisSource } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
+const MODEL_NAME = "gemini-2.5-flash";
+
 const newsArticleSchema = {
     type: Type.ARRAY,
     items: {
@@ -17,36 +19,58 @@ const newsArticleSchema = {
 
 export const analyzeNewsArticle = async (articleContent: string): Promise<AnalysisResult> => {
   const systemInstruction = `
-    You are an expert news analyst and meticulous fact-checker. Your goal is to provide a neutral, unbiased assessment of a news article's credibility using Google Search to ground your analysis.
-    Analyze the provided article content based on the following criteria:
-    1.  **Factual Accuracy**: Identify key claims and verify them against search results. Are there any clear inaccuracies or unsupported statements?
-    2.  **Source Reliability**: Does the article cite sources? If so, are they reputable? Is there a reliance on anonymous sources? Your own search results can act as sources.
-    3.  **Bias and Tone**: Examine the language used. Is it neutral and objective, or is it emotionally charged, loaded, or sensationalized? Does it present a balanced view or is it one-sided?
-    4.  **Overall Credibility**: Based on the above, provide a score from 1 (very low credibility, likely fake news) to 10 (very high credibility, trustworthy journalism).
+    You are a Game Theory Oracle and Fact-Checker. Your goal is to reach a consensus on an article's accuracy using a Nash Equilibrium voting mechanism.
+    
+    The Players:
+    1. Gemini AI (The Oracle/Fact-Checker)
+    2. X (Twitter) Pulse (Public sentiment/discussions)
 
-    IMPORTANT: Your entire response must be ONLY the raw JSON object, without any surrounding text, comments, or markdown formatting like \`\`\`json ... \`\`\`. The JSON object must conform to this structure:
+    The Mechanism:
+    - Each player must VOTE: 'TRUE', 'FALSE', or 'UNCERTAIN'.
+    - REWARD: +10 points if a player aligns with the final consensus.
+    - PUNISHMENT: -10 points if a player deviates from the consensus.
+    - GOAL: Reach a Nash Equilibrium where no player can improve their payoff by unilaterally changing their vote.
+    - ITERATION: You MUST simulate AT LEAST 5 ROUNDS of voting. Even if consensus is reached early, continue for 5 rounds to explore edge cases, potential counter-arguments, and verify the stability of the equilibrium.
+    - ROUND LOGIC: Each round should show a progression of reasoning as agents consider new evidence or the votes of others.
+
+    Analyze the provided article content and search for related discussions on X.
+    
+    IMPORTANT: Your entire response must be ONLY the raw JSON object. The JSON object must conform to this structure:
     {
       "summary": "string",
-      "credibilityScore": integer (1-10),
       "factuality": "string",
       "biasAnalysis": "string",
-      "sourceAnalysis": "string"
+      "sourceAnalysis": "string",
+      "gameMechanism": {
+        "rounds": [
+          {
+            "roundNumber": 1,
+            "agents": [
+              { "name": "Gemini AI", "vote": "TRUE" | "FALSE" | "UNCERTAIN", "reasoning": "string", "payoff": integer },
+              { "name": "X (Twitter)", "vote": "TRUE" | "FALSE" | "UNCERTAIN", "reasoning": "string", "payoff": integer }
+            ],
+            "consensusReached": boolean,
+            "equilibriumType": "Nash" | "None"
+          }
+        ],
+        "finalVerdict": "TRUE" | "FALSE" | "UNCERTAIN",
+        "totalRewardPool": integer
+      }
     }
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: `Please analyze the following article:\n\n---\n\n${articleContent}`,
+    model: MODEL_NAME,
+    contents: `Analyze this article and run the Game Theory Voting Mechanism:\n\n---\n\n${articleContent}`,
     config: {
       systemInstruction: systemInstruction,
-      temperature: 0.2,
+      temperature: 0.1, // Low temperature for consistency in game logic
       tools: [{googleSearch: {}}],
     },
   });
   
   const rawText = response.text;
   try {
-    // Find the start and end of the JSON object to make parsing more robust
     const startIndex = rawText.indexOf('{');
     const endIndex = rawText.lastIndexOf('}');
     
@@ -55,16 +79,15 @@ export const analyzeNewsArticle = async (articleContent: string): Promise<Analys
     }
 
     const jsonText = rawText.substring(startIndex, endIndex + 1);
-    
     const parsedJson = JSON.parse(jsonText);
+    
     const sources: AnalysisSource[] = response.candidates?.[0]?.groundingMetadata?.groundingChunks?.map(
         (chunk: any) => ({
-            title: chunk.web.title,
-            uri: chunk.web.uri,
+            title: chunk.web?.title || "Search Result",
+            uri: chunk.web?.uri || "",
         })
     ).filter(source => source.uri) ?? [];
 
-    // Remove duplicates based on URI
     const uniqueSources = Array.from(new Map(sources.map(s => [s.uri, s])).values());
 
     return { ...parsedJson, sources: uniqueSources } as AnalysisResult;
@@ -81,7 +104,7 @@ export const fetchLatestNews = async (): Promise<NewsArticle[]> => {
     Return the list as a JSON array.
     `;
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: MODEL_NAME,
         contents: "List the top 5 news headlines.",
         config: {
             systemInstruction: systemInstruction,

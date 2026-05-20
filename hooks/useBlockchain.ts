@@ -8,15 +8,27 @@ export const useBlockchain = () => {
 
   const createGenesisBlock = useCallback(async () => {
     const genesisData: AnalysisResult = {
-      summary: 'Genesis Block - The beginning of the ledger.',
-      credibilityScore: 10,
-      factuality: 'N/A',
-      biasAnalysis: 'N/A',
-      sourceAnalysis: 'N/A',
+      summary: 'Genesis Block',
+      factuality: '',
+      biasAnalysis: '',
+      sourceAnalysis: '',
+      gameMechanism: {
+        rounds: [{
+          roundNumber: 1,
+          agents: [
+            { name: 'Gemini AI', vote: 'UNCERTAIN', reasoning: 'Genesis block', payoff: 0 },
+            { name: 'X (Twitter)', vote: 'UNCERTAIN', reasoning: 'Genesis block', payoff: 0 },
+          ],
+          consensusReached: true,
+          equilibriumType: 'Nash',
+        }],
+        finalVerdict: 'UNCERTAIN',
+        totalRewardPool: 0,
+      },
     };
     const genesisBlock: Omit<Block, 'hash'> = {
       index: 0,
-      timestamp: Date.now(),
+      timestamp: new Date().toISOString(),
       data: genesisData,
       previousHash: '0',
     };
@@ -37,7 +49,7 @@ export const useBlockchain = () => {
     const latestBlock = getLatestBlock();
     const newBlockData: Omit<Block, 'hash'> = {
       index: latestBlock.index + 1,
-      timestamp: Date.now(),
+      timestamp: new Date().toISOString(),
       data: newData,
       previousHash: latestBlock.hash,
     };

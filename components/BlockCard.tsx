@@ -7,84 +7,58 @@ interface BlockCardProps {
 
 export const BlockCard: React.FC<BlockCardProps> = ({ block }) => {
 
-  const getScoreColor = (score: number) => {
-    if (score >= 8) return 'border-[#39ff14]';
-    if (score >= 5) return 'border-[#ffa500]';
-    return 'border-[#ff0040]';
+  const getVoteColor = (vote: string) => {
+    if (vote === 'TRUE') return 'text-green-700';
+    if (vote === 'FALSE') return 'text-red-700';
+    return 'text-yellow-700';
   }
 
-  const getScoreTextColor = (score: number) => {
-    if (score >= 8) return 'text-[#39ff14]';
-    if (score >= 5) return 'text-[#ffa500]';
-    return 'text-[#ff0040]';
+  const getBorderColor = (vote: string) => {
+    if (vote === 'TRUE') return 'border-l-green-600';
+    if (vote === 'FALSE') return 'border-l-red-600';
+    return 'border-l-yellow-600';
   }
 
-  const getScoreGlow = (score: number) => {
-    if (score >= 8) return 'neon-glow-green';
-    if (score >= 5) return 'neon-glow-orange';
-    return 'shadow-[0_0_20px_rgba(255,0,64,0.4)]';
+  const getBadgeBorder = (vote: string) => {
+    if (vote === 'TRUE') return 'border-green-700';
+    if (vote === 'FALSE') return 'border-red-700';
+    return 'border-yellow-700';
   }
+
+  const verdict = block.data.gameMechanism?.finalVerdict || 'UNCERTAIN';
 
   return (
-    <div className={`glass rounded-xl border-l-4 ${getScoreColor(block.data.credibilityScore)} transition-all duration-300 hover:border-[#00f0ff] hover:shadow-2xl hover:shadow-[#00f0ff]/20 overflow-hidden relative group animate-slide-up`}>
-        {/* Holographic overlay on hover */}
-        <div className="holographic absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"></div>
-
-        <div className="p-6 relative z-10">
+    <div className={`bg-white border-2 border-black rounded-sm border-l-[8px] ${getBorderColor(verdict)} transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#000]`}>
+        <div className="p-5">
             <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                   <span className="text-xs font-mono text-[#00f0ff] bg-[#00f0ff]/10 px-2 py-1 rounded border border-[#00f0ff]/30">
-                     BLOCK #{block.index}
-                   </span>
-                   <h3 className="text-lg font-orbitron font-bold text-white mt-3 leading-tight">
-                     {block.data.summary}
-                   </h3>
+                <div>
+                   <span className="text-xs text-gray-500 font-serif font-bold uppercase tracking-widest">Block #{block.index}</span>
+                   <h3 className="text-xl font-bold text-black mt-1" style={{ fontFamily: 'Playfair Display, serif' }}>{block.data.summary}</h3>
                 </div>
-
-                <div className={`glass px-5 py-3 rounded-lg border-2 ${getScoreColor(block.data.credibilityScore)} ${getScoreGlow(block.data.credibilityScore)} ml-4`}>
-                    <p className={`font-orbitron font-black text-3xl text-center ${getScoreTextColor(block.data.credibilityScore)}`}>
-                      {block.data.credibilityScore}
-                      <span className="text-base text-gray-500">/10</span>
+                <div className={`px-4 py-2 border-2 ${getBadgeBorder(verdict)} bg-white text-center ml-4`}>
+                    <p className={`font-serif font-black text-lg tracking-wider ${getVoteColor(verdict)}`}>
+                      {verdict}
                     </p>
-                    <p className="text-xs text-gray-400 text-center font-mono mt-1 uppercase">Score</p>
+                    <p className="text-[10px] text-gray-500 uppercase font-serif mt-1 tracking-widest border-t border-gray-200 pt-1">Consensus</p>
                 </div>
             </div>
 
-            <div className="mt-5 pt-5 border-t border-[#00f0ff]/30 text-xs text-gray-400 space-y-3 font-rajdhani">
-                <div className="flex items-start space-x-2">
-                  <span className="text-[#00f0ff] font-mono">▸</span>
-                  <p className="flex-1">
-                    <strong className="font-semibold text-gray-300 font-mono">FACTUALITY:</strong>{' '}
-                    <span className="text-gray-400">{block.data.factuality}</span>
-                  </p>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <span className="text-[#ff6b00] font-mono">▸</span>
-                  <p className="flex-1">
-                    <strong className="font-semibold text-gray-300 font-mono">BIAS:</strong>{' '}
-                    <span className="text-gray-400">{block.data.biasAnalysis}</span>
-                  </p>
+            <div className="pt-4 border-t border-gray-200 text-sm text-gray-700 space-y-2 font-serif">
+                <p><strong className="text-black uppercase tracking-wider text-xs">Evidence:</strong> {block.data.factuality}</p>
+                <p><strong className="text-black uppercase tracking-wider text-xs">Equilibrium:</strong> {block.data.gameMechanism?.rounds[block.data.gameMechanism.rounds.length - 1]?.equilibriumType || 'N/A'}</p>
+                <div className="flex gap-2 mt-3 pt-2">
+                  {block.data.gameMechanism?.rounds[0]?.agents.map((agent, idx) => (
+                    <span key={idx} className="bg-gray-100 px-2 py-1 border border-gray-300 text-xs font-bold text-gray-800">
+                      {agent.name.split(' ')[0]}: <span className={`${getVoteColor(agent.vote)}`}>{agent.vote}</span>
+                    </span>
+                  ))}
                 </div>
             </div>
         </div>
-
-        {/* Blockchain metadata footer */}
-        <div className="bg-black/60 px-6 py-4 rounded-b-xl font-mono text-xs text-gray-500 space-y-2 border-t border-[#00f0ff]/20">
-             <div className="flex items-center space-x-2">
-               <span className="text-[#00f0ff]">⧗</span>
-               <strong className="text-gray-400">TIMESTAMP:</strong>
-               <span className="text-gray-500">{new Date(block.timestamp).toISOString()}</span>
-             </div>
-             <div className="flex items-start space-x-2 overflow-hidden">
-               <span className="text-[#00f0ff]">⬢</span>
-               <strong className="text-gray-400">HASH:</strong>
-               <span className="text-[#00f0ff] truncate">{block.hash}</span>
-             </div>
-             <div className="flex items-start space-x-2 overflow-hidden">
-               <span className="text-[#ff6b00]">⬡</span>
-               <strong className="text-gray-400">PREV:</strong>
-               <span className="text-gray-500 truncate">{block.previousHash}</span>
-             </div>
+        <div className="bg-gray-50 px-5 py-3 border-t-2 border-black font-[Courier_Prime] text-xs text-gray-600 space-y-2 overflow-hidden">
+             <p className="truncate"><strong className="text-black">Timestamp:</strong> {new Date(block.timestamp).toISOString()}</p>
+             <p className="truncate"><strong className="text-black">Hash:</strong> <span className="text-black font-bold">{block.hash}</span></p>
+             <p className="truncate"><strong className="text-black">Prev. Hash:</strong> {block.previousHash}</p>
         </div>
     </div>
   );

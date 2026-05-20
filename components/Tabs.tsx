@@ -10,7 +10,8 @@ interface TabsProps {
 export const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { name: Tab.Detector, label: 'ANALYZER' },
-    { name: Tab.Ledger, label: 'LEDGER' }
+    { name: Tab.Ledger, label: 'LEDGER' },
+    { name: Tab.Metrics, label: 'METRICS' }
   ];
 
   const getTabClass = (tab: Tab) => {

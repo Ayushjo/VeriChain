@@ -5,13 +5,19 @@ import { Detector } from './components/Detector';
 import { Ledger } from './components/Ledger';
 import { useBlockchain } from './hooks/useBlockchain';
 import { analyzeNewsArticle, fetchLatestNews } from './services/geminiService';
-import type { AnalysisResult, NewsArticle } from './types';
+import type { AnalysisResult, NewsArticle, PerformanceMetric } from './types';
 import { Tab } from './types';
+import { Performance } from './components/Performance';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.Detector);
   const { chain, addBlock, isChainValid } = useBlockchain();
+  const [metrics, setMetrics] = useState<PerformanceMetric[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  const logMetric = (metric: PerformanceMetric) => {
+    setMetrics(prev => [metric, ...prev]);
+  };
   const [error, setError] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
 
@@ -28,12 +34,19 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setAnalysisResult(null);
+    const start = Date.now();
     try {
       const result = await analyzeNewsArticle(articleContent);
+      logMetric({
+        operation: 'AI Analysis',
+        durationMs: Date.now() - start,
+        timestamp: new Date().toISOString(),
+        details: `Rounds: ${result.gameMechanism.rounds.length}, Verdict: ${result.gameMechanism.finalVerdict}`,
+      });
       setAnalysisResult(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Failed to analyze the article. The AI model might be unavailable or returned an unexpected format. Please try again later.");
+      setError(err.message || "Failed to analyze the article. The AI model might be unavailable or returned an unexpected format. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -44,21 +57,35 @@ const App: React.FC = () => {
     setNewsError(null);
     setNewsArticles([]);
     setAnalysisResult(null);
+    const start = Date.now();
     try {
       const articles = await fetchLatestNews();
+      logMetric({
+        operation: 'News Fetch',
+        durationMs: Date.now() - start,
+        timestamp: new Date().toISOString(),
+        details: `${articles.length} articles fetched`,
+      });
       setNewsArticles(articles);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setNewsError("Failed to fetch latest news. Please try again later.");
+      setNewsError(err.message || "Failed to fetch latest news. Please try again later.");
     } finally {
       setIsFetchingNews(false);
     }
   };
 
 
-  const handleRecordToLedger = () => {
+  const handleRecordToLedger = async () => {
     if (analysisResult) {
-      addBlock(analysisResult);
+      const start = Date.now();
+      await addBlock(analysisResult);
+      logMetric({
+        operation: 'Ledger Write (Hashing)',
+        durationMs: Date.now() - start,
+        timestamp: new Date().toISOString(),
+        details: `Block #${chain.length} added`,
+      });
       setAnalysisResult(null);
       setActiveTab(Tab.Ledger);
     }
@@ -85,6 +112,9 @@ const App: React.FC = () => {
           )}
           {activeTab === Tab.Ledger && (
             <Ledger chain={chain} isChainValid={isChainValid()} />
+          )}
+          {activeTab === Tab.Metrics && (
+            <Performance metrics={metrics} />
           )}
         </div>
       </main>
